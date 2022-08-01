@@ -6,6 +6,8 @@ https://docs.qq.com/sheet/DRndRRWRrU3hxV0Nh?tab=BB08J2
 https://mhrise.kiranico.com/zh
 http://mhrise.mhrice.info
 https://mhrise.wiki-db.com/sim/?hl=zh-hant
+文字版使用说明请查阅：https://www.gcores.com/articles/154159
+视频版使用说明请查阅：https://www.bilibili.com/video/BV1La411U7sT?share_source=copy_web&vd_source=ab808ab867470a00baaf2fdd52dc12e9
 
 
 1.	紫，白，蓝斩的消耗比例:0.5,0.5,0; 1,0,0; 0,0.8,0.2; ...
