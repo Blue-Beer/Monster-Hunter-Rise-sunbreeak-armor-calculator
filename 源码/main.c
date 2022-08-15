@@ -9,14 +9,14 @@
 
 //only calculate weapon final phy attack
 //存储不同种类技能
-int armor_phy_skill_low[12]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-int armor_phy_skill_high[12]={7,5,5,3,3,5,5,3,3,3,3,3};    
+int armor_phy_skill_low[14]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+int armor_phy_skill_high[14]={7,5,5,3,3,5,5,3,3,3,3,3,3,3};    
 int armor_elem_skill_low[4]={-1,-1,-1,-1};
 int armor_elem_skill_high[4]={5,4,4,4};
 int armor_affi_skill_low[3]={-1,-1,-1};
 int armor_affi_skill_high[3]={7,3,3};
-int armor_dmg_skill_low[2]={-1,-1};
-int armor_dmg_skill_high[2]={3,3};
+int armor_dmg_skill_low[3]={-1,-1,-1};
+int armor_dmg_skill_high[3]={3,3,3};
 //存储武器的面板数据
 double weapon_attack;
 double sharpness[3]={0,0,0};    //紫，白，蓝斩的消耗比例:0.5,0.5,0; 1,0,0; 0,0.8,0.2; ...
@@ -40,18 +40,19 @@ double add_atk_p_a=0;       //物理+会心的攻击的加算乘算和会心加算
 double multi_atk_p_a=1;     //
 double add_affi_p_a=0;      //
 double crit_phy=1.25;       //物理伤害的会心初始倍率
-double crit_elem=1;         //属性伤害的会心初始倍率
+double crit_elem=1;         //会心击属性伤害的会心初始倍率
+double crit_elem_weak=1;    //属性弱特的会心初始倍率
 //存储对应各个技能的覆盖率
-double armor_phy_skill_k[12];
+double armor_phy_skill_k[14];
 double armor_elem_skill_k[4];
 double armor_affi_skill_k[3];
-double armor_dmg_skill_k[2];
+double armor_dmg_skill_k[3];
 
-//上限30000组物理攻击力相关技能的技能组合0-5，6，7为计算得到物理攻击力乘算，加算
-//攻击，怨恨，死里逃生，攻击守势，火场怪力，龙气活性
-double result_phy_atk[30000][8];
+//上限480000组物理攻击力相关技能的技能组合0-7，8，9为计算得到物理攻击力乘算，加算
+//攻击，怨恨，死里逃生，攻击守势，火场怪力，龙气活性，巧击，偷袭
+double result_phy_atk[480000][10];
 int count_phy_atk=0;
-int count_phy_atk_max=30000;
+int count_phy_atk_max=480000;
 int overflow_phy_atk=0;   //设定超过时置1并警告
 
 //上限1000组属性攻击力相关技能组合0-3，4，5为计算得到属性攻击力乘算，加算
@@ -82,16 +83,16 @@ int count_atk_affi=0;
 int count_atk_affi_max=10;
 int overflow_atk_affi=0;   //设定超过时置1并警告
 
-//上限20组伤害补正相关技能组合0-1，2,3为计算得到物理，属性伤害乘算
-//超会心，会心击属性
-double result_dmg[20][4];
+//上限80组伤害补正相关技能组合0-2，3,4,5为计算得到物理，属性伤害1,属性伤害2乘算
+//超会心，会心击属性 弱特属性
+double result_dmg[80][6];
 int count_dmg=0;
-int count_dmg_max=20;
+int count_dmg_max=80;
 int overflow_dmg=0;   //设定超过时置1并警告
 
 
 //上限为10000的最终伤害结果存储
-double result_final[10000][22];     //12+4+3+2=21技能0-20，21计算伤害
+double result_final[10000][25];     //14+4+3+3=24技能0-23，24计算伤害
 int count_final=0;
 int count_final_max=10000;
 int overflow_final=0;   //设定超过时置1并警告
@@ -218,7 +219,7 @@ void read()
             k=0;
             p = strtok(s, delim);
             //printf("%s\n%s\n",s,p);
-            while (p != NULL && k < 12) 
+            while (p != NULL && k < 14) 
             {
                 armor_phy_skill_low[k] = atoi(p);//字符串转整型
                 //printf("armor_phy_skill_low[%d]=%d ",k, armor_phy_skill_low[k]);
@@ -237,7 +238,7 @@ void read()
             k=0;
             p = strtok(s, delim);
             //printf("%s\n%s\n",s,p);
-            while (p != NULL && k < 12) 
+            while (p != NULL && k < 14) 
             {
                 armor_phy_skill_k[k] = atof(p);//字符串转浮点
                 //printf("armor_phy_skill_k[%d]=%lf\n",k, armor_phy_skill_k[k]);
@@ -319,7 +320,7 @@ void read()
             //printf("%s\n",s);
             p = strtok(s, delim);
             
-            while (p != NULL && k < 2) 
+            while (p != NULL && k < 3) 
             {
                 armor_dmg_skill_low[k] = atoi(p);//字符串转整型
                 //printf("armor_dmg_skill_low[%d]=%d\n",k, armor_dmg_skill_low[k]);
@@ -339,7 +340,7 @@ void read()
             //printf("%s\n",s);
             p = strtok(s, delim);
             
-            while (p != NULL && k < 2) 
+            while (p != NULL && k < 3) 
             {
                 armor_dmg_skill_k[k] = atof(p);//字符串转整型
                 //printf("armor_dmg_skill_k[%d]=%d\n",k, armor_dmg_skill_k[k]);
@@ -350,7 +351,7 @@ void read()
 
     }
 }
-void restore_phy_atk_result(int i0,int i1,int i2,int i3,int i4,int i5)
+void restore_phy_atk_result(int i0,int i1,int i2,int i3,int i4,int i5,int i6,int i7)
 {
     if (i0<0)i0=0; 
     if (i1<0)i1=0; 
@@ -358,25 +359,29 @@ void restore_phy_atk_result(int i0,int i1,int i2,int i3,int i4,int i5)
     if (i3<0)i3=0; 
     if (i4<0)i4=0; 
     if (i5<0)i5=0; 
+    if (i6<0)i6=0; 
+    if (i7<0)i7=0;
     result_phy_atk[count_phy_atk][0]=i0;
     result_phy_atk[count_phy_atk][1]=i1;
     result_phy_atk[count_phy_atk][2]=i2;
     result_phy_atk[count_phy_atk][3]=i3;
     result_phy_atk[count_phy_atk][4]=i4;
     result_phy_atk[count_phy_atk][5]=i5;
-    result_phy_atk[count_phy_atk][6]=multi_atk_phy;
-    result_phy_atk[count_phy_atk][7]=add_atk_phy;
+    result_phy_atk[count_phy_atk][6]=i6;
+    result_phy_atk[count_phy_atk][7]=i7;
+    result_phy_atk[count_phy_atk][8]=multi_atk_phy;
+    result_phy_atk[count_phy_atk][9]=add_atk_phy;
     count_phy_atk++;
     if(count_phy_atk>=count_phy_atk_max) overflow_phy_atk = 1;
 }
 void cal_phy_atk()
 {
     /*
-    攻击,怨恨,死里逃生,攻击守势,火场怪力,龙气活性
+    攻击,怨恨,死里逃生,攻击守势,火场怪力,龙气活性,巧击,偷袭
     */
     //printf("%d",armor_phy_skill_low[16]);
     
-    int i0,i1,i2,i3,i4,i5;
+    int i0,i1,i2,i3,i4,i5,i6,i7;
     for(i0=armor_phy_skill_high[0];i0>=armor_phy_skill_low[0]&&i0>=0;i0--)   //攻击
     {
         //printf("011\n");
@@ -421,18 +426,35 @@ void cal_phy_atk()
                             if(armor_phy_skill_low[6]>=0)
                             multi_atk_phy = multi_atk_phy * (1-armor_phy_skill_k[6]+Dragonheart_multi[i5] * armor_phy_skill_k[6]);
                             else multi_atk_phy = multi_atk_phy,i5=0;
-                                                        
-                            restore_phy_atk_result(i0,i1,i2,i3,i4,i5);
-                            if(overflow_phy_atk == 1)
+                            for(i6=armor_phy_skill_high[12];i6>=armor_phy_skill_low[12]&&i6>=0;i6--)    //巧击
                             {
-                                printf("01 Too many requseted skills, please limit your requirement! \n");
-                                add_atk_phy=0;
-                                multi_atk_phy=1;
-                                return;
-                            }
-                            else
-                            {
-                                //printf("armor physical attack calculating:...%d... multi:%lf add:%lf\n",count_phy_atk,multi_atk_phy,add_atk_phy);
+                                if(armor_phy_skill_low[12]>=0)
+                                add_atk_phy = add_atk_phy + Adrenaline_Rush[i6] * armor_phy_skill_k[12];
+                                else add_atk_phy = add_atk_phy,i6=0;
+                                for(i7=armor_phy_skill_high[13];i7>=armor_phy_skill_low[13]&&i7>=0;i7--)    //偷袭
+                                {
+                                    if(armor_phy_skill_low[13]>=0)
+                                    multi_atk_phy = multi_atk_phy * (1-armor_phy_skill_k[13] + Sneak_Attack[i7] * armor_phy_skill_k[13]);
+                                    else multi_atk_phy = multi_atk_phy,i7=0;
+                                    restore_phy_atk_result(i0,i1,i2,i3,i4,i5,i6,i7);
+                                    if(overflow_phy_atk == 1)
+                                    {
+                                        printf("01 Too many requseted skills, please limit your requirement! \n");
+                                        add_atk_phy=0;
+                                        multi_atk_phy=1;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        //printf("armor physical attack calculating:...%d... multi:%lf add:%lf\n",count_phy_atk,multi_atk_phy,add_atk_phy);
+                                    }
+                                    if(armor_phy_skill_low[13]>=0)
+                                    multi_atk_phy = multi_atk_phy / (1-armor_phy_skill_k[13] + Sneak_Attack[i7] * armor_phy_skill_k[13]);
+                                    else multi_atk_phy = multi_atk_phy;
+                                }
+                                if(armor_phy_skill_low[12]>=0)
+                                add_atk_phy = add_atk_phy - Adrenaline_Rush[i6] * armor_phy_skill_k[12];
+                                else add_atk_phy = add_atk_phy;
                             }
                             if(armor_phy_skill_low[6]>=0)
                             multi_atk_phy = multi_atk_phy / (1-armor_phy_skill_k[6]+Dragonheart_multi[i5] * armor_phy_skill_k[6]);
@@ -879,22 +901,25 @@ void cal_atk_affi()
         }
     }
 }
-void restore_dmg_result(int i0,int i1)
+void restore_dmg_result(int i0,int i1,int i2)
 {
     if (i0<0)i0=0; 
     if (i1<0)i1=0; 
+    if (i2<0)i2=0; 
     result_dmg[count_dmg][0] = i0;
     result_dmg[count_dmg][1] = i1;
-    result_dmg[count_dmg][2] = crit_phy;
-    result_dmg[count_dmg][3] = crit_elem;
+    result_dmg[count_dmg][2] = i2;
+    result_dmg[count_dmg][3] = crit_phy;
+    result_dmg[count_dmg][4] = crit_elem;
+    result_dmg[count_dmg][5] = crit_elem_weak;
     count_dmg++;
 }
 void cal_dmg()
 {
     /*
-    超会心，属性会心
+    超会心，属性会心，弱特属性
     */
-    int i0,i1;
+    int i0,i1,i2;
     for(i0=armor_dmg_skill_high[0];i0>=armor_dmg_skill_low[0]&&i0>=0;i0--)
     {
         if(armor_dmg_skill_low[0]>=0)
@@ -905,15 +930,20 @@ void cal_dmg()
             if(armor_dmg_skill_low[1]>=0)
             crit_elem = Critical_Element[i1];
             else crit_elem = Critical_Element[0],i1=0;
-            restore_dmg_result(i0,i1);
-            if(overflow_dmg == 1)
+            for(i2=armor_dmg_skill_high[2];i2>=armor_dmg_skill_low[2]&&i2>=0;i2--)
             {
-                printf("06 Too many requseted skills, please limit your requirement! \n");
-                add_affi = 0;
-                return;
+                if(armor_dmg_skill_low[2]>=0 && hit_elem >= 20)
+                crit_elem_weak = Element_Exploit[i2];
+                else crit_elem_weak = Element_Exploit[0],i2=0;
+                restore_dmg_result(i0,i1,i2);
+                if(overflow_dmg == 1)
+                {
+                    printf("06 Too many requseted skills, please limit your requirement! \n");
+                    add_affi = 0;
+                    return;
+                }
+                crit_elem_weak = Element_Exploit[0];
             }
-            //printf("armor damage calculating:...%d... phy_dmg:%lf ele_dmg:%lf\n",count_dmg,result_dmg[count_dmg-1][2],result_dmg[count_dmg-1][3]);
-            //printf("%d %d\n",i0,i1);
             crit_elem = Critical_Element[0];
         }
         crit_phy = Critical_Boost[0];
@@ -921,31 +951,42 @@ void cal_dmg()
 }
 void restore_final_result(int i1,int i2,int i3,int i4,int i5,int i6,int dmg)
 {
-    int k;  //6 4 5 3 1 2
-    for(k = 0;k < 6;k++)
+    int k;  //8 4 5 3 1 3
+    for(k = 0;k < 8;k++)
     {
-        if(k>0)
+        if(k>0&&k<6)
         result_final[count_final][k+1] = result_phy_atk[i1][k];
-        else result_final[count_final][k] = result_phy_atk[i1][k];
+        else if(k==0)
+        result_final[count_final][k] = result_phy_atk[i1][k];
+        else if(k>5)
+        result_final[count_final][k+6] = result_phy_atk[i1][k];
     }
+    //printf("1\n");
     for(k=0;k<4;k++)
     {
-        result_final[count_final][12+k] = result_elem_atk[i2][k];
+        result_final[count_final][14+k] = result_elem_atk[i2][k];
     }
+    //printf("1\n");
     for(k=0;k<5;k++)
     {
         result_final[count_final][7+k] = result_phy_elem_atk[i3][k];
     }
+    //printf("1\n");
     for(k=0;k<3;k++)
     {
-        result_final[count_final][16+k] = result_affi[i4][k];
+        result_final[count_final][18+k] = result_affi[i4][k];
     }
+    //printf("1\n");
     k=0 , result_final[count_final][1] = result_atk_affi[i5][k];
-    for(k=0;k<2;k++)
+    //printf("1\n");
+    for(k=0;k<3;k++)
     {
-        result_final[count_final][19+k] = result_dmg[i6][k];
+        result_final[count_final][21+k] = result_dmg[i6][k];
     }
-    result_final[count_final][21] = dmg;
+    //printf("1\n");
+    result_final[count_final][24] = dmg;
+    //int kk;
+    //for(kk=0;kk<25;kk++) printf("%d ",result_final[count_final][kk]);
     count_final++;
     if(count_final >= count_final_max) overflow_final = 1;
 }
@@ -957,9 +998,9 @@ void sort()
     {
         for (j = 0; j < count_final - 1 - i; j++)
         {
-            if (result_final[j][21] < result_final[j+1][21])
+            if (result_final[j][24] < result_final[j+1][24])
             {
-                for(k=0;k<22;k++)
+                for(k=0;k<25;k++)
                 {
                     temp[k] = result_final[j][k];
                     result_final[j][k] = result_final[j+1][k];
@@ -977,16 +1018,16 @@ void fliter()
     sharp_elem = 1.25*sharpness[0]+1.15*sharpness[1]+1.06*sharpness[2]+1*(1-sharpness[0]-sharpness[1]-sharpness[2]);
 
     //计算最大等级的伤害期望
-    double maxatk_phy = weapon_attack * (result_phy_atk[0][6] * result_phy_elem_atk[0][5] * result_atk_affi[0][1]) 
-                + (result_phy_atk[0][7] + result_phy_elem_atk[0][6] + result_atk_affi[0][2]);
+    double maxatk_phy = weapon_attack * (result_phy_atk[0][8] * result_phy_elem_atk[0][5] * result_atk_affi[0][1]) 
+                + (result_phy_atk[0][9] + result_phy_elem_atk[0][6] + result_atk_affi[0][2]);
     double maxatk_elem = weapon_element[1] * (result_elem_atk[0][4] * result_phy_elem_atk[0][7]) 
                 + (result_elem_atk[0][5] + result_phy_elem_atk[0][8]) ;
     double maxaffi = result_atk_affi[0][3] + result_affi[0][3] + Bloodlust_affi_add[3] * 0.78 * armor_phy_skill_high[10];
-    double maxdmg_phy = maxatk_phy /100 * (1 - maxaffi / 100 + maxaffi / 100 * result_dmg[0][2]) * sharp_phy * hit_phy * action /100;
-    double maxdmg_elem = maxatk_elem * (1 - maxaffi / 100 + maxaffi / 100 * result_dmg[0][3]) * sharp_elem * hit_elem * action_element/100;
+    double maxdmg_phy = maxatk_phy /100 * (1 - maxaffi / 100 + maxaffi / 100 * result_dmg[0][3]) * sharp_phy * hit_phy * action /100;
+    double maxdmg_elem = maxatk_elem * (1 - maxaffi / 100 + maxaffi / 100 * result_dmg[0][4]) * sharp_elem * hit_elem * action_element / 100 * result_dmg[0][5];
     
     int maxdmg ;
-    if(weapon_element[0]==0)\
+    if(weapon_element[0]==0)
     {
         maxdmg = (int)(maxdmg_phy + 0.5);
     }
@@ -1022,16 +1063,16 @@ void fliter()
                         {
                             for(i6=0;i6<count_dmg;i6++)
                             {
-                                atk_phy = weapon_attack * (result_phy_atk[i1][6] * result_phy_elem_atk[i3][5] * result_atk_affi[i5][1]) 
-                                            + (result_phy_atk[i1][7] + result_phy_elem_atk[i3][6] + result_atk_affi[i5][2]);
+                                atk_phy = weapon_attack * (result_phy_atk[i1][8] * result_phy_elem_atk[i3][5] * result_atk_affi[i5][1]) 
+                                            + (result_phy_atk[i1][9] + result_phy_elem_atk[i3][6] + result_atk_affi[i5][2]);
                                 atk_elem = weapon_element[1] * (result_elem_atk[i2][4] * result_phy_elem_atk[i3][7]) 
                                             + (result_elem_atk[i2][5] + result_phy_elem_atk[i3][8]) ;
                                 if((int)result_phy_elem_atk[i3][3]==3)
                                 {affi = result_atk_affi[i5][3] + result_affi[i4][3] + Bloodlust_affi_add[3] * 0.78 * armor_phy_skill_high[10];}
                                 else 
                                 {affi = result_atk_affi[i5][3] + result_affi[i4][3] + Bloodlust_affi_add[(int)result_phy_elem_atk[i3][3]] * 0.7* armor_phy_skill_high[10];}
-                                dmg_phy = atk_phy /100 * (1 - affi / 100 + affi / 100 * result_dmg[i6][2]) * sharp_phy * hit_phy * action /100;
-                                dmg_elem = atk_elem * (1 - affi / 100 + affi / 100 * result_dmg[i6][3]) * sharp_elem * hit_elem * action_element/100;
+                                dmg_phy = atk_phy /100 * (1 - affi / 100 + affi / 100 * result_dmg[i6][3]) * sharp_phy * hit_phy * action /100;
+                                dmg_elem = atk_elem * (1 - affi / 100 + affi / 100 * result_dmg[i6][4]) * sharp_elem * hit_elem * action_element/100 * result_dmg[i6][5];
                                 if(weapon_element[0]==0)
                                 {
                                     dmg = (int)(dmg_phy + 0.5);
@@ -1040,7 +1081,7 @@ void fliter()
                                 {
                                     dmg = (int)(dmg_phy + 0.5) + (int)(dmg_elem + 0.5);
                                 }
-                                
+                                //printf("%d\n",dmg);
                                 //对比gap进行筛选
                                 if(dmg >= maxdmg - gap - 5 && dmg <= maxdmg - gap + 5)
                                 {
@@ -1084,13 +1125,13 @@ void putout()
         printf("fopen() failed.\n");
         return;
     }
-    char *x="攻击,挑战者,怨恨,死里逃生,攻击守势,火场怪力,龙气活性,伏魔耗命,业铠修罗红,因祸得福,狂龙病,连击,对应属性攻击强化,钢龙的恩惠,炎鳞的恩惠,风雷合一,看破,弱点特效,精神抖擞,超会心,会心击属性";
+    char *x="攻击,挑战者,怨恨,死里逃生,攻击守势,火场怪力,龙气活性,伏魔耗命,业铠修罗红,因祸得福,狂龙病,连击,巧击,偷袭,对应属性攻击强化,钢龙的恩惠,炎鳞的恩惠,风雷合一,看破,弱点特效,精神抖擞,超会心,会心击属性,弱特属性";
     //fprintf(fp,"%s\n",x);
     int i,j;
     for(i=0;i<count_final;i++)
     {
         if(i%10==0) fprintf(fp,"%s\n",x);
-        for(j=0;j<22;j++)
+        for(j=0;j<25;j++)
         {
             fprintf(fp,"%d,",(int)result_final[i][j]);
         }
@@ -1107,17 +1148,18 @@ int main()
     read();
 
     cal_phy_atk();
-    
+
     cal_elem_atk();
     
     cal_phy_elem_atk(); 
+    
     
     cal_affi();
     
     cal_atk_affi(); 
     
     cal_dmg();
-
+    
     fliter();
 
     return 0;
